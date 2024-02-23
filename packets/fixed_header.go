@@ -192,3 +192,18 @@ func checkTopicName(name string) error {
 	}
 	return nil
 }
+
+func checkSubAckPayload(payload []byte) error {
+	if payload == nil || len(payload) < 1 {
+		return enmu.SubAckPayloadEmpty
+	}
+	for i, _ := range payload {
+		b := payload[i]
+		if b == 0x00 || b == 0x01 || b == 0x02 || b == 0x80 {
+			continue
+		} else {
+			return enmu.SubAckPayloadError
+		}
+	}
+	return nil
+}

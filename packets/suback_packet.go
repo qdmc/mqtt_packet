@@ -46,6 +46,10 @@ func (c *SubAckPacket) Qos() byte {
 func (c *SubAckPacket) Write(w io.Writer) (int64, error) {
 	var body bytes.Buffer
 	var err error
+	err = checkSubAckPayload(c.ReturnCodes)
+	if err != nil {
+		return 0, err
+	}
 	body.Write(encodeUint16(c.MessageID))
 	body.Write(c.ReturnCodes)
 	head := c.GetFixedHead()
@@ -76,5 +80,13 @@ func (c *SubAckPacket) Unpack(b io.Reader) error {
 	}
 	codeBs := make([]byte, c.head.RemainingLength-2)
 	_, err = b.Read(codeBs)
-	return err
+	if err != nil {
+		return err
+	}
+	err = checkSubAckPayload(codeBs)
+	if err != nil {
+		return err
+	}
+	c.ReturnCodes = codeBs
+	return nil
 }
