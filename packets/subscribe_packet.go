@@ -99,14 +99,20 @@ func (c *SubscribePacket) Unpack(b io.Reader) error {
 	if c.List == nil {
 		c.List = []*TopicFilter{}
 	}
-	length := c.GetFixedHead().RemainingLength - 2
+	if c.head == nil {
+		return enmu.FixedEmpty
+	}
+	length := c.head.RemainingLength - 2
 	for length > 0 {
 		tf := new(TopicFilter)
 		err = tf.Read(b)
 		if err != nil {
 			return err
 		}
-		length -= 2 + len(tf.Topic) + 1
+		length -= 2 + len([]byte(tf.Topic)) + 1
+	}
+	if len(c.List) == 0 {
+		return enmu.TopicsEmpty
 	}
 	return nil
 }

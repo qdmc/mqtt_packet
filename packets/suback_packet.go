@@ -2,7 +2,6 @@ package packets
 
 import (
 	"bytes"
-	"errors"
 	"git.rundle.cn/bingo_queues/mqtt_packet/enmu"
 	"io"
 )
@@ -65,10 +64,10 @@ func (c *SubAckPacket) Write(w io.Writer) (int64, error) {
 
 func (c *SubAckPacket) Unpack(b io.Reader) error {
 	if c.head == nil {
-		return errors.New("FixedHeader is empty")
+		return enmu.FixedEmpty
 	}
 	if c.head.RemainingLength < 2 {
-		return errors.New("FixedHeader.RemainingLength is error")
+		return enmu.RemainingLengthErr
 	}
 	var err error
 	c.MessageID, err = decodeUint16(b)

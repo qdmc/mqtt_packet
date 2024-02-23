@@ -75,14 +75,25 @@ func (c *UnSubscribePacket) Write(w io.Writer) (int64, error) {
 }
 
 func (c *UnSubscribePacket) Unpack(b io.Reader) error {
+	if c.head == nil {
+		return enmu.FixedEmpty
+	}
 	var err error
 	c.MessageID, err = decodeUint16(b)
 	if err != nil {
 		return err
 	}
-
-	for topic, err := decodeString(b); err == nil && topic != ""; topic, err = decodeString(b) {
-		c.Topics = append(c.Topics, topic)
+	length := c.head.RemainingLength - 2
+	var topic string
+	for length > 0 {
+		topic, err = decodeString(b)
+		if err != nil {
+			return err
+		}
+		if topic == "" {
+			return enmu.TopicError
+		}
+		length -= 2 + len([]byte(topic))
 	}
 	return err
 }

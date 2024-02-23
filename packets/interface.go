@@ -26,39 +26,39 @@ type ControlPacketInterface interface {
 }
 
 // NewPacketWithFixedHeader   根据固定报头生成报文
-func NewPacketWithFixedHeader(f *FixedHeader) ControlPacketInterface {
+func NewPacketWithFixedHeader(f *FixedHeader) (ControlPacketInterface, error) {
 	if f == nil {
-		return nil
+		return nil, enmu.FixedEmpty
 	}
 	switch f.MessageType {
 	case enmu.CONNECT:
-		return NewConnect(f)
+		return NewConnect(f), nil
 	case enmu.CONNACK:
-		return NewConnAck(f)
+		return NewConnAck(f), nil
 	case enmu.PUBLISH:
-		return NewPublish(f)
+		return NewPublish(f), nil
 	case enmu.PUBACK:
-		return NewPubAck(f)
+		return NewPubAck(f), nil
 	case enmu.PUBREC:
-		return NewPubRec(f)
+		return NewPubRec(f), nil
 	case enmu.PUBREL:
-		return NewPubRel(f)
+		return NewPubRel(f), nil
 	case enmu.PUBCOMP:
-		return NewPubComp(f)
+		return NewPubComp(f), nil
 	case enmu.SUBSCRIBE:
-		return NewSubscribe(f)
+		return NewSubscribe(f), nil
 	case enmu.SUBACK:
-		return NewSubAck(f)
+		return NewSubAck(f), nil
 	case enmu.UNSUBSCRIBE:
-		return NewUnSubscribe(f)
+		return NewUnSubscribe(f), nil
 	case enmu.UNSUBACK:
-		return NewUnSubAck(f)
+		return NewUnSubAck(f), nil
 	case enmu.PINGREQ:
-		return NewPingReq(f)
+		return NewPingReq(f), nil
 	case enmu.PINGRESP:
-		return NewPingResp(f)
+		return NewPingResp(f), nil
 	case enmu.DISCONNECT:
-		return NewDisconnect(f)
+		return NewDisconnect(f), nil
 	}
-	return nil
+	return nil, enmu.TypeError
 }
