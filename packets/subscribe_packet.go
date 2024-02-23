@@ -12,6 +12,17 @@ type TopicFilter struct {
 	Qos   byte
 }
 
+func (t *TopicFilter) check() error {
+	err := checkTopicName(t.Topic)
+	if err != nil {
+		return err
+	}
+	err = checkQos(t.Qos)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (t *TopicFilter) Read(r io.Reader) error {
 	var err error
 	t.Topic, err = decodeString(r)
@@ -73,8 +84,20 @@ func (c *SubscribePacket) Write(w io.Writer) (int64, error) {
 	var body bytes.Buffer
 	var err error
 	body.Write(encodeUint16(c.MessageID))
+	var topicsBs []byte
 	for _, tf := range c.List {
-		body.Write(tf.ToBytes())
+		if tf == nil {
+			continue
+		}
+		err = tf.check()
+		if err != nil {
+			return 0, err
+		}
+		//body.Write(tf.ToBytes())
+		topicsBs = append(topicsBs, tf.ToBytes()...)
+	}
+	if len(topicsBs) == 0 {
+		return 0, enmu.TopicError
 	}
 	head := c.GetFixedHead()
 	head.RemainingLength = body.Len()
@@ -106,6 +129,10 @@ func (c *SubscribePacket) Unpack(b io.Reader) error {
 	for length > 0 {
 		tf := new(TopicFilter)
 		err = tf.Read(b)
+		if err != nil {
+			return err
+		}
+		err = tf.check()
 		if err != nil {
 			return err
 		}

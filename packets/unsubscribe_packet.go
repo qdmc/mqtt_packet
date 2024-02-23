@@ -55,7 +55,12 @@ func (c *UnSubscribePacket) Write(w io.Writer) (int64, error) {
 		return 0, err
 	}
 	for i, _ := range c.Topics {
-		_, err = body.Write(encodeString(c.Topics[i]))
+		title := c.Topics[i]
+		err = checkTopicName(title)
+		if err != nil {
+			return 0, err
+		}
+		_, err = body.Write(encodeString(title))
 		if err != nil {
 			return 0, err
 		}
@@ -90,8 +95,9 @@ func (c *UnSubscribePacket) Unpack(b io.Reader) error {
 		if err != nil {
 			return err
 		}
-		if topic == "" {
-			return enmu.TopicError
+		err = checkTopicName(topic)
+		if err != nil {
+			return err
 		}
 		length -= 2 + len([]byte(topic))
 	}

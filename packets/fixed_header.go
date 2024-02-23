@@ -75,13 +75,18 @@ func ReadFixedHeader(r io.Reader) (*FixedHeader, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &FixedHeader{
+	h := &FixedHeader{
 		MessageType:     enmu.MessageType(b >> 4),
 		Dup:             (b>>3)&0x01 > 0,
 		Qos:             (b >> 1) & 0x03,
 		Retain:          b&0x01 > 0,
 		RemainingLength: length,
-	}, nil
+	}
+	err = checkQos(h.Qos)
+	if err != nil {
+		return nil, err
+	}
+	return h, nil
 
 }
 
@@ -172,4 +177,18 @@ func boolToByte(b bool) byte {
 	default:
 		return 0
 	}
+}
+
+func checkQos(qos byte) error {
+	if qos > 2 {
+		return enmu.QosError
+	}
+	return nil
+}
+
+func checkTopicName(name string) error {
+	if name == "" {
+		return enmu.TopicError
+	}
+	return nil
 }
