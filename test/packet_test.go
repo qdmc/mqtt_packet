@@ -63,11 +63,13 @@ func writePacket(cp mqtt_packet.ControlPacketInterface, packetBytesLength int) (
 }
 
 func Test_readPacket(t *testing.T) {
+	var packetBytes []byte
 	for i, _ := range hexStrMap {
 		bs, err := getPacketBytes(i)
 		if err != nil {
 			t.Fatal(err.Error())
 		}
+		packetBytes = append(packetBytes, bs...)
 		packetBytesLength := len(bs)
 		cp, err := mqtt_packet.ReadOnce(bytes.NewBuffer(bs))
 		if err != nil {
@@ -86,6 +88,21 @@ func Test_readPacket(t *testing.T) {
 			println("write: ", string(buf.Bytes()), "  hex: ", hex.EncodeToString(buf.Bytes()))
 			t.Fatal("packet error")
 		}
+	}
+
+	packetBytes = append(packetBytes, 0x00)
+	println("allLen: ", len(packetBytes))
+	list, lastBs, err := mqtt_packet.ReadStream(packetBytes)
+	if err != nil {
+		t.Fatal("readStreamErr: ", err.Error())
+	}
+	if lastBs == nil || len(lastBs) != 1 || lastBs[0] != 0x00 {
+		println("listLen: ", len(list))
+		t.Fatal("lastBytes is error")
+
+	}
+	if len(list) != len(hexStrMap) {
+		t.Fatal("packet list is error")
 	}
 }
 

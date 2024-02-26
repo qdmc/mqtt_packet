@@ -57,9 +57,7 @@ func ReadStream(bs []byte) (list []ControlPacketInterface, lastBytes []byte, err
 	var header *FixedHeader
 	var cp ControlPacketInterface
 	for {
-		if len(bs) == 0 {
-			return list, nil, nil
-		} else if len(bs) == 1 {
+		if len(bs) == 0 || len(bs) == 1 {
 			return list, bs, nil
 		}
 		headBs := bs[:2]
@@ -72,11 +70,12 @@ func ReadStream(bs []byte) (list []ControlPacketInterface, lastBytes []byte, err
 		if err != nil {
 			return list, bs, err
 		}
+		//println("---- RemainingLength:　", header.RemainingLength, "　　　bsLen: ", len(bs), "  messageType: ", header.MessageType)
 		if header.RemainingLength == 0 {
 			list = append(list, cp)
 			continue
 		} else {
-			if header.RemainingLength >= len(bs) {
+			if header.RemainingLength <= len(bs) {
 				packetBs := bs[:header.RemainingLength]
 				bs = bs[header.RemainingLength:]
 				err = cp.Unpack(bytes.NewBuffer(packetBs))
