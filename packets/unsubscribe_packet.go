@@ -89,6 +89,7 @@ func (c *UnSubscribePacket) Unpack(b io.Reader) error {
 		return err
 	}
 	length := c.head.RemainingLength - 2
+	c.Topics = []string{}
 	var topic string
 	for length > 0 {
 		topic, err = decodeString(b)
@@ -99,6 +100,7 @@ func (c *UnSubscribePacket) Unpack(b io.Reader) error {
 		if err != nil {
 			return err
 		}
+		c.Topics = append(c.Topics, topic)
 		length -= 2 + len([]byte(topic))
 	}
 	return err

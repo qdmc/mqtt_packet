@@ -52,9 +52,14 @@ func (f *FixedHeader) ToBytes() ([]byte, error) {
 			fistByte += 1
 		}
 	} else if f.MessageType == enmu.SUBSCRIBE || f.MessageType == enmu.PUBREL || f.MessageType == enmu.UNSUBSCRIBE {
-		fistByte += 1 << 1
+		if f.Qos == 1 {
+			fistByte += 1 << 1
+		}
 	}
 	bs = append(bs, byte(fistByte))
+	if f.RemainingLength == 0 {
+		return append(bs, 0), nil
+	}
 	lengths, err := uity.EncodeVariableByte(f.RemainingLength)
 	if err != nil {
 		return nil, err

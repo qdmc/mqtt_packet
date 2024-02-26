@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"git.rundle.cn/bingo_queues/mqtt_packet"
 	"git.rundle.cn/bingo_queues/mqtt_packet/enmu"
+	"git.rundle.cn/bingo_queues/mqtt_packet/packets"
 	"testing"
 )
 
@@ -37,19 +38,114 @@ func getPacketBytes(t enmu.MessageType) ([]byte, error) {
 		return nil, enmu.TypeError
 	}
 }
-func writePacket(cp mqtt_packet.ControlPacketInterface, packetBytesLength int) error {
+func writePacket(cp mqtt_packet.ControlPacketInterface, packetBytesLength int) (*bytes.Buffer, error) {
 	writeBuf := bytes.NewBuffer([]byte{})
+	var err error
+	defer func() {
+		if err != nil {
+			print("messageType: ", cp.MessageType())
+		}
+
+	}()
 	length, err := cp.Write(writeBuf)
 	if err != nil {
-		return errors.New(fmt.Sprintf("packetWriteErr: %s", err.Error()))
+		return nil, errors.New(fmt.Sprintf("packetWriteErr: %s", err.Error()))
 	}
 	if int(length) != packetBytesLength {
-		return errors.New(fmt.Sprintf("packetWriteLenErr: %d ,packetBsLne: %d", length, packetBytesLength))
+		err = errors.New(fmt.Sprintf("packetWriteLenErr: %d ,packetBsLne: %d", length, packetBytesLength))
+		return nil, err
 	}
 	if writeBuf.Len() != packetBytesLength {
-		return errors.New(fmt.Sprintf("bufLengthErr: %d ,packetBsLne: %d", writeBuf.Len(), packetBytesLength))
+		err = errors.New(fmt.Sprintf("bufLengthErr: %d ,packetBsLne: %d", writeBuf.Len(), packetBytesLength))
+		return nil, err
 	}
-	return nil
+	return writeBuf, nil
+}
+
+func Test_readPacket(t *testing.T) {
+	for i, _ := range hexStrMap {
+		bs, err := getPacketBytes(i)
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+		packetBytesLength := len(bs)
+		cp, err := mqtt_packet.ReadOnce(bytes.NewBuffer(bs))
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+		if cp.MessageType() != i {
+			t.Fatal("messageType :", i, "  ", cp.MessageType())
+		}
+		buf, err := writePacket(cp, packetBytesLength)
+		if err != nil {
+			t.Fatal(err.Error())
+		}
+		if string(buf.Bytes()) != string(bs) {
+			println("messageType: ", i)
+			println("old: ", string(bs), "  hex: ", hex.EncodeToString(bs))
+			println("write: ", string(buf.Bytes()), "  hex: ", hex.EncodeToString(buf.Bytes()))
+			t.Fatal("packet error")
+		}
+	}
+}
+
+func Test_PingReq(t *testing.T) {
+	var packetBytesLength int
+	bs, err := getPacketBytes(enmu.PINGREQ)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	packetBytesLength = len(bs)
+	cp, err := mqtt_packet.ReadOnce(bytes.NewBuffer(bs))
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	p, ok := cp.(*packets.PingReqPacket)
+	if !ok {
+		t.Fatal("is not pingReq packet")
+	}
+	buf, err := writePacket(p, packetBytesLength)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	if string(buf.Bytes()) != string(bs) {
+		println("messageType: ", enmu.PINGREQ)
+		println("old: ", string(bs))
+		println("write: ", string(buf.Bytes()))
+		t.Fatal("packet error")
+	}
+}
+
+func Test_UnSubscribe(t *testing.T) {
+	var packetBytesLength int
+	bs, err := getPacketBytes(enmu.UNSUBSCRIBE)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	packetBytesLength = len(bs)
+	cp, err := mqtt_packet.ReadOnce(bytes.NewBuffer(bs))
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	p, ok := cp.(*mqtt_packet.UnSubscribePacket)
+	if !ok {
+		t.Fatal("is not unsubscribe packet")
+	}
+	if p.Topics != nil {
+		for i, topic := range p.Topics {
+			println("index: ", i, "  topic: ", topic)
+		}
+	}
+	buf, err := writePacket(p, packetBytesLength)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	if string(buf.Bytes()) != string(bs) {
+		println("messageType: ", enmu.UNSUBSCRIBE)
+		println("old: ", string(bs))
+		println("write: ", string(buf.Bytes()))
+		t.Fatal("packet error")
+	}
 }
 func Test_Connect(t *testing.T) {
 	var packetBytesLength int
@@ -75,8 +171,42 @@ func Test_Connect(t *testing.T) {
 	if string(p.Password) != "password" {
 		t.Fatal("password error: ", string(p.Password))
 	}
-	err = writePacket(p, packetBytesLength)
+	buf, err := writePacket(p, packetBytesLength)
 	if err != nil {
 		t.Fatal(err.Error())
+	}
+	if string(buf.Bytes()) != string(bs) {
+		println("messageType: ", enmu.CONNECT)
+		println("old: ", string(bs))
+		println("write: ", string(buf.Bytes()))
+		t.Fatal("packet error")
+	}
+}
+
+func Test_PubRel(t *testing.T) {
+	var packetBytesLength int
+	bs, err := getPacketBytes(enmu.PUBREL)
+	println("bs :", hex.EncodeToString(bs))
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	packetBytesLength = len(bs)
+	cp, err := mqtt_packet.ReadOnce(bytes.NewBuffer(bs))
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	p, ok := cp.(*mqtt_packet.PubRelPacket)
+	if !ok {
+		t.Fatal("is not PubRelPacket packet")
+	}
+	buf, err := writePacket(p, packetBytesLength)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	if string(buf.Bytes()) != string(bs) {
+		println("messageType: ", enmu.PUBREL)
+		println("old: ", string(bs), "  hex: ", hex.EncodeToString(bs))
+		println("write: ", string(buf.Bytes()), "  hex: ", hex.EncodeToString(buf.Bytes()))
+		t.Fatal("packet error")
 	}
 }

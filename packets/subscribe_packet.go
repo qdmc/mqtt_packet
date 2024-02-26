@@ -99,6 +99,7 @@ func (c *SubscribePacket) Write(w io.Writer) (int64, error) {
 	if len(topicsBs) == 0 {
 		return 0, enmu.TopicError
 	}
+	body.Write(topicsBs)
 	head := c.GetFixedHead()
 	head.RemainingLength = body.Len()
 	head.MessageType = c.MessageType()
@@ -126,6 +127,7 @@ func (c *SubscribePacket) Unpack(b io.Reader) error {
 		return enmu.FixedEmpty
 	}
 	length := c.head.RemainingLength - 2
+	c.List = []*TopicFilter{}
 	for length > 0 {
 		tf := new(TopicFilter)
 		err = tf.Read(b)
@@ -136,6 +138,7 @@ func (c *SubscribePacket) Unpack(b io.Reader) error {
 		if err != nil {
 			return err
 		}
+		c.List = append(c.List, tf)
 		length -= 2 + len([]byte(tf.Topic)) + 1
 	}
 	if len(c.List) == 0 {
