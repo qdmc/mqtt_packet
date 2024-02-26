@@ -13,6 +13,10 @@ type MessageType = enmu.MessageType
 // FixedHeader    固定报头
 type FixedHeader = packets.FixedHeader
 
+func NewFixedHeader(t MessageType) *FixedHeader {
+	return packets.NewFixedHeader(t)
+}
+
 /*
 ControlPacketInterface        报文通用接口
   - MessageType()              返回报文类型
@@ -25,9 +29,14 @@ ControlPacketInterface        报文通用接口
 */
 type ControlPacketInterface = packets.ControlPacketInterface
 
-// NewControlPacket           根据固定报头生成报文
-func NewControlPacket(f *FixedHeader) (ControlPacketInterface, error) {
+// NewControlPacketWithFixedHead           根据固定报头生成报文
+func NewControlPacketWithFixedHead(f *FixedHeader) (ControlPacketInterface, error) {
 	return packets.NewPacketWithFixedHeader(f)
+}
+
+// NewControlPacket                        生成报文,默认为PingReq报文
+func NewControlPacket(t enmu.MessageType) ControlPacketInterface {
+	return packets.NewControlPacket(t)
 }
 
 // NewFixedHead               创建一个新的 固定报头
@@ -66,7 +75,7 @@ func ReadStream(bs []byte) (list []ControlPacketInterface, lastBytes []byte, err
 		if err != nil {
 			return list, bs, err
 		}
-		cp, err = NewControlPacket(header)
+		cp, err = NewControlPacketWithFixedHead(header)
 		if err != nil {
 			return list, bs, err
 		}

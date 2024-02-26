@@ -62,3 +62,42 @@ func NewPacketWithFixedHeader(f *FixedHeader) (ControlPacketInterface, error) {
 	}
 	return nil, enmu.TypeError
 }
+
+func NewControlPacket(t enmu.MessageType) ControlPacketInterface {
+	if t < 1 || t > 14 {
+		t = enmu.PINGREQ
+	}
+	f := NewFixedHeader(t)
+	switch f.MessageType {
+	case enmu.CONNECT:
+		return NewConnect(f)
+	case enmu.CONNACK:
+		return NewConnAck(f)
+	case enmu.PUBLISH:
+		return NewPublish(f)
+	case enmu.PUBACK:
+		return NewPubAck(f)
+	case enmu.PUBREC:
+		return NewPubRec(f)
+	case enmu.PUBREL:
+		return NewPubRel(f)
+	case enmu.PUBCOMP:
+		return NewPubComp(f)
+	case enmu.SUBSCRIBE:
+		return NewSubscribe(f)
+	case enmu.SUBACK:
+		return NewSubAck(f)
+	case enmu.UNSUBSCRIBE:
+		return NewUnSubscribe(f)
+	case enmu.UNSUBACK:
+		return NewUnSubAck(f)
+	case enmu.PINGREQ:
+		return NewPingReq(f)
+	case enmu.PINGRESP:
+		return NewPingResp(f)
+	case enmu.DISCONNECT:
+		return NewDisconnect(f)
+	default:
+		return NewPingReq(f)
+	}
+}
