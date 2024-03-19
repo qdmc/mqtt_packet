@@ -2,7 +2,7 @@ package packets
 
 import (
 	"bytes"
-	"github.com/qdmc/websocket_packet/enmu"
+	"github.com/qdmc/mqtt_packet/enmu"
 	"io"
 )
 

@@ -5,8 +5,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/qdmc/websocket_packet/enmu"
-	"github.com/qdmc/websocket_packet/packets"
+	"github.com/qdmc/mqtt_packet"
+	"github.com/qdmc/mqtt_packet/enmu"
+	"github.com/qdmc/mqtt_packet/packets"
 	"testing"
 )
 

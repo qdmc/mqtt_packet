@@ -2,8 +2,8 @@ package mqtt_packet
 
 import (
 	"bytes"
-	"github.com/qdmc/websocket_packet/enmu"
-	"github.com/qdmc/websocket_packet/packets"
+	"github.com/qdmc/mqtt_packet/enmu"
+	"github.com/qdmc/mqtt_packet/packets"
 	"io"
 )
 
