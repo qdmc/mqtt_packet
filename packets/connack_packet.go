@@ -2,7 +2,7 @@ package packets
 
 import (
 	"bytes"
-	"git.rundle.cn/bingo_queues/mqtt_packet/enmu"
+	"github.com/qdmc/websocket_packet/enmu"
 	"io"
 )
 

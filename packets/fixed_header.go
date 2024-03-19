@@ -3,9 +3,7 @@ package packets
 import (
 	"bytes"
 	"encoding/binary"
-	"git.rundle.cn/bingo_queues/mqtt_packet/enmu"
-	"git.rundle.cn/bingo_queues/mqtt_packet/uity"
-
+	"github.com/qdmc/websocket_packet/enmu"
 	"io"
 )
 
@@ -60,7 +58,7 @@ func (f *FixedHeader) ToBytes() ([]byte, error) {
 	if f.RemainingLength == 0 {
 		return append(bs, 0), nil
 	}
-	lengths, err := uity.EncodeVariableByte(f.RemainingLength)
+	lengths, err := encodeVariableByte(f.RemainingLength)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +74,7 @@ func ReadFixedHeader(r io.Reader) (*FixedHeader, error) {
 		return nil, err
 	}
 	b := buf[0]
-	length, err := uity.DecodeVariableByte(r)
+	length, err := decodeVariableByte(r)
 	if err != nil {
 		return nil, err
 	}
@@ -151,14 +149,14 @@ func decodeBytes(b io.Reader) ([]byte, error) {
 	return field, nil
 }
 func decodeString(r io.Reader) (string, error) {
-	return uity.ReadString(r)
+	return readString(r)
 }
 
 func decodeByte(b io.Reader) (byte, error) {
-	return uity.ReadByte(b)
+	return readByte(b)
 }
 func decodeUint16(b io.Reader) (uint16, error) {
-	return uity.ReadUin16(b)
+	return readUin16(b)
 }
 func encodeUint16(num uint16) []byte {
 	bytesResult := make([]byte, 2)

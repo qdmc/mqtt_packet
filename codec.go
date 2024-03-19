@@ -2,8 +2,8 @@ package mqtt_packet
 
 import (
 	"bytes"
-	"git.rundle.cn/bingo_queues/mqtt_packet/enmu"
-	"git.rundle.cn/bingo_queues/mqtt_packet/packets"
+	"github.com/qdmc/websocket_packet/enmu"
+	"github.com/qdmc/websocket_packet/packets"
 	"io"
 )
 

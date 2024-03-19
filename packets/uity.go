@@ -1,4 +1,4 @@
-package uity
+package packets
 
 import (
 	"encoding/binary"
@@ -6,7 +6,7 @@ import (
 	"io"
 )
 
-func ReadByte(r io.Reader) (byte, error) {
+func readByte(r io.Reader) (byte, error) {
 	num := make([]byte, 1)
 	_, err := io.ReadFull(r, num)
 	//_, err := r.Read(num)
@@ -16,7 +16,7 @@ func ReadByte(r io.Reader) (byte, error) {
 	return num[0], nil
 }
 
-func ReadUin16(r io.Reader) (uint16, error) {
+func readUin16(r io.Reader) (uint16, error) {
 	num := make([]byte, 2)
 	_, err := io.ReadFull(r, num)
 	//_, err := r.Read(num)
@@ -26,19 +26,19 @@ func ReadUin16(r io.Reader) (uint16, error) {
 	return binary.BigEndian.Uint16(num), nil
 }
 
-func ReadString(r io.Reader) (string, error) {
-	bsLen, err := ReadUin16(r)
+func readString(r io.Reader) (string, error) {
+	bsLen, err := readUin16(r)
 	if err != nil {
 		return "", err
 	}
-	bs, err := ReadBytes(r, uint(bsLen))
+	bs, err := readBytes(r, uint(bsLen))
 	if err != nil {
 		return "", err
 	}
 	return string(bs), nil
 }
 
-func ReadBytes(r io.Reader, bsLen uint) ([]byte, error) {
+func readBytes(r io.Reader, bsLen uint) ([]byte, error) {
 	bs := make([]byte, bsLen)
 	_, err := io.ReadFull(r, bs)
 	//_, err := r.Read(bs)
@@ -48,8 +48,8 @@ func ReadBytes(r io.Reader, bsLen uint) ([]byte, error) {
 	return bs, nil
 }
 
-// EncodeVariableByte 打码 变长字节整数
-func EncodeVariableByte(length int) ([]byte, error) {
+// encodeVariableByte 打码 变长字节整数
+func encodeVariableByte(length int) ([]byte, error) {
 	maxLen := 268435455
 	if length > maxLen {
 		return nil, errors.New("length is to big")
@@ -75,8 +75,8 @@ func EncodeVariableByte(length int) ([]byte, error) {
 	return encLength, nil
 }
 
-// DecodeVariableByte 解码码 变长字节整数
-func DecodeVariableByte(r io.Reader) (int, error) {
+// decodeVariableByte 解码码 变长字节整数
+func decodeVariableByte(r io.Reader) (int, error) {
 	var rLength uint32
 	var multiplier uint32
 	b := make([]byte, 1)
