@@ -69,26 +69,32 @@ func (c *PublishPacket) Write(w io.Writer) (int64, error) {
 	return buf.WriteTo(w)
 }
 
-func (c *PublishPacket) Unpack(b io.Reader) error {
+func (c *PublishPacket) Unpack(b io.Reader) (int, error) {
 	var payloadLength = c.GetFixedHead().RemainingLength
 	var err error
-	c.TopicName, err = decodeString(b)
+	var readLen, rl int
+	readLen, c.TopicName, err = decodeString(b)
 	if err != nil {
-		return err
+		return readLen, err
 	}
 	if c.Qos() > 0 {
 		c.MessageID, err = decodeUint16(b)
 		if err != nil {
-			return err
+			return readLen, err
 		}
+		readLen += 2
 		payloadLength -= len(c.TopicName) + 4
 	} else {
 		payloadLength -= len(c.TopicName) + 2
 	}
 	if payloadLength < 0 {
-		return fmt.Errorf("error unpacking publish, payload length < 0")
+		return readLen, fmt.Errorf("error unpacking publish, payload length < 0")
 	}
 	c.Payload = make([]byte, payloadLength)
-	_, err = b.Read(c.Payload)
-	return err
+	rl, err = b.Read(c.Payload)
+	if err != nil {
+		return readLen, err
+	}
+	readLen += rl
+	return readLen, nil
 }

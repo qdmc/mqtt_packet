@@ -66,27 +66,30 @@ func (c *SubAckPacket) Write(w io.Writer) (int64, error) {
 	return buf.WriteTo(w)
 }
 
-func (c *SubAckPacket) Unpack(b io.Reader) error {
+func (c *SubAckPacket) Unpack(b io.Reader) (int, error) {
+	var readLen, rl int
 	if c.head == nil {
-		return enmu.FixedEmpty
+		return readLen, enmu.FixedEmpty
 	}
 	if c.head.RemainingLength < 2 {
-		return enmu.RemainingLengthErr
+		return readLen, enmu.RemainingLengthErr
 	}
 	var err error
 	c.MessageID, err = decodeUint16(b)
 	if err != nil {
-		return err
+		return readLen, err
 	}
+	readLen += 2
 	codeBs := make([]byte, c.head.RemainingLength-2)
-	_, err = b.Read(codeBs)
+	rl, err = b.Read(codeBs)
 	if err != nil {
-		return err
+		return readLen, err
 	}
+	readLen += rl
 	err = checkSubAckPayload(codeBs)
 	if err != nil {
-		return err
+		return readLen, err
 	}
 	c.ReturnCodes = codeBs
-	return nil
+	return readLen, nil
 }

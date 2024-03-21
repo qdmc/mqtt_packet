@@ -79,29 +79,32 @@ func (c *UnSubscribePacket) Write(w io.Writer) (int64, error) {
 	return buf.WriteTo(w)
 }
 
-func (c *UnSubscribePacket) Unpack(b io.Reader) error {
-	if c.head == nil {
-		return enmu.FixedEmpty
-	}
+func (c *UnSubscribePacket) Unpack(b io.Reader) (int, error) {
 	var err error
+	var readLen, rl int
+	if c.head == nil {
+		return readLen, enmu.FixedEmpty
+	}
 	c.MessageID, err = decodeUint16(b)
 	if err != nil {
-		return err
+		return readLen, err
 	}
+	readLen += 2
 	length := c.head.RemainingLength - 2
 	c.Topics = []string{}
 	var topic string
 	for length > 0 {
-		topic, err = decodeString(b)
+		rl, topic, err = decodeString(b)
 		if err != nil {
-			return err
+			return readLen, err
 		}
 		err = checkTopicName(topic)
 		if err != nil {
-			return err
+			return readLen, err
 		}
+		readLen += rl
 		c.Topics = append(c.Topics, topic)
 		length -= 2 + len([]byte(topic))
 	}
-	return err
+	return readLen, err
 }

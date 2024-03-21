@@ -67,29 +67,32 @@ func (f *FixedHeader) ToBytes() ([]byte, error) {
 }
 
 // ReadFixedHeader 固定报头 解码
-func ReadFixedHeader(r io.Reader) (*FixedHeader, error) {
+func ReadFixedHeader(r io.Reader) (int, *FixedHeader, error) {
+	var headLen int
 	buf := make([]byte, 1)
 	_, err := io.ReadFull(r, buf)
 	if err != nil {
-		return nil, err
+		return headLen, nil, err
 	}
+	headLen += 1
 	b := buf[0]
-	length, err := decodeVariableByte(r)
+	readLen, length, err := decodeVariableByte(r)
 	if err != nil {
-		return nil, err
+		return headLen, nil, err
 	}
+	headLen += readLen
 	h := &FixedHeader{
 		MessageType:     enmu.MessageType(b >> 4),
 		Dup:             (b>>3)&0x01 > 0,
 		Qos:             (b >> 1) & 0x03,
 		Retain:          b&0x01 > 0,
-		RemainingLength: length,
+		RemainingLength: int(length),
 	}
 	err = checkQos(h.Qos)
 	if err != nil {
-		return nil, err
+		return headLen, nil, err
 	}
-	return h, nil
+	return headLen, h, nil
 
 }
 
@@ -134,21 +137,22 @@ func (f *FixedHeader) SetFixedHeaderDup(b bool) *FixedHeader {
 	}
 	return f
 }
-func decodeBytes(b io.Reader) ([]byte, error) {
+func decodeBytes(b io.Reader) (int, []byte, error) {
+	var readLen int
 	fieldLength, err := decodeUint16(b)
 	if err != nil {
-		return nil, err
+		return readLen, nil, err
 	}
-
+	readLen += 2
 	field := make([]byte, fieldLength)
 	_, err = b.Read(field)
 	if err != nil {
-		return nil, err
+		return readLen, nil, err
 	}
-
-	return field, nil
+	readLen += int(fieldLength)
+	return readLen, field, nil
 }
-func decodeString(r io.Reader) (string, error) {
+func decodeString(r io.Reader) (int, string, error) {
 	return readString(r)
 }
 

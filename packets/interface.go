@@ -22,7 +22,7 @@ type ControlPacketInterface interface {
 	GetFixedHead() *FixedHeader
 	Qos() byte
 	Write(w io.Writer) (int64, error)
-	Unpack(b io.Reader) error
+	Unpack(b io.Reader) (int, error)
 }
 
 // NewPacketWithFixedHeader   根据固定报头生成报文

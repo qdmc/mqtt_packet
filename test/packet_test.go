@@ -71,7 +71,7 @@ func Test_readPacket(t *testing.T) {
 		}
 		packetBytes = append(packetBytes, bs...)
 		packetBytesLength := len(bs)
-		cp, err := mqtt_packet.ReadOnce(bytes.NewBuffer(bs))
+		_, cp, err := mqtt_packet.ReadOnce(bytes.NewBuffer(bs))
 		if err != nil {
 			t.Fatal(err.Error())
 		}
@@ -113,7 +113,7 @@ func Test_PingReq(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 	packetBytesLength = len(bs)
-	cp, err := mqtt_packet.ReadOnce(bytes.NewBuffer(bs))
+	_, cp, err := mqtt_packet.ReadOnce(bytes.NewBuffer(bs))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -140,7 +140,7 @@ func Test_UnSubscribe(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 	packetBytesLength = len(bs)
-	cp, err := mqtt_packet.ReadOnce(bytes.NewBuffer(bs))
+	_, cp, err := mqtt_packet.ReadOnce(bytes.NewBuffer(bs))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -171,7 +171,7 @@ func Test_Connect(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 	packetBytesLength = len(bs)
-	cp, err := mqtt_packet.ReadOnce(bytes.NewBuffer(bs))
+	_, cp, err := mqtt_packet.ReadOnce(bytes.NewBuffer(bs))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -208,7 +208,7 @@ func Test_PubRel(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 	packetBytesLength = len(bs)
-	cp, err := mqtt_packet.ReadOnce(bytes.NewBuffer(bs))
+	_, cp, err := mqtt_packet.ReadOnce(bytes.NewBuffer(bs))
 	if err != nil {
 		t.Fatal(err.Error())
 	}

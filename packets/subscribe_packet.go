@@ -23,17 +23,19 @@ func (t *TopicFilter) check() error {
 	}
 	return nil
 }
-func (t *TopicFilter) Read(r io.Reader) error {
+func (t *TopicFilter) Read(r io.Reader) (int, error) {
 	var err error
-	t.Topic, err = decodeString(r)
+	var readLen int
+	readLen, t.Topic, err = decodeString(r)
 	if err != nil {
-		return err
+		return readLen, err
 	}
 	t.Qos, err = decodeByte(r)
 	if err != nil {
-		return err
+		return readLen, err
 	}
-	return nil
+	readLen += 1
+	return readLen, nil
 }
 func (t *TopicFilter) ToBytes() []byte {
 	bs := encodeString(t.Topic)
@@ -114,35 +116,38 @@ func (c *SubscribePacket) Write(w io.Writer) (int64, error) {
 	return buf.WriteTo(w)
 }
 
-func (c *SubscribePacket) Unpack(b io.Reader) error {
+func (c *SubscribePacket) Unpack(b io.Reader) (int, error) {
 	var err error
+	var readLen, rl int
+	if c.head == nil {
+		return readLen, enmu.FixedEmpty
+	}
 	c.MessageID, err = decodeUint16(b)
 	if err != nil {
-		return err
+		return readLen, err
 	}
+	readLen += 2
 	if c.List == nil {
 		c.List = []*TopicFilter{}
-	}
-	if c.head == nil {
-		return enmu.FixedEmpty
 	}
 	length := c.head.RemainingLength - 2
 	c.List = []*TopicFilter{}
 	for length > 0 {
 		tf := new(TopicFilter)
-		err = tf.Read(b)
+		rl, err = tf.Read(b)
 		if err != nil {
-			return err
+			return readLen, err
 		}
 		err = tf.check()
 		if err != nil {
-			return err
+			return readLen, err
 		}
+		readLen += rl
 		c.List = append(c.List, tf)
 		length -= 2 + len([]byte(tf.Topic)) + 1
 	}
 	if len(c.List) == 0 {
-		return enmu.TopicsEmpty
+		return readLen, enmu.TopicsEmpty
 	}
-	return nil
+	return readLen, nil
 }

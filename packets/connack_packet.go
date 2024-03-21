@@ -60,12 +60,12 @@ func (c *ConnAckPacket) Write(w io.Writer) (int64, error) {
 	return buf.WriteTo(w)
 }
 
-func (c *ConnAckPacket) Unpack(b io.Reader) error {
+func (c *ConnAckPacket) Unpack(b io.Reader) (int, error) {
 	flags, err := decodeByte(b)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	c.SessionPresent = 1&flags > 0
 	c.ReturnCode, err = decodeByte(b)
-	return err
+	return 2, err
 }

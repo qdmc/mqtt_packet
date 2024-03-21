@@ -53,8 +53,8 @@ func (c *PubRecPacket) Write(w io.Writer) (int64, error) {
 	return buf.WriteTo(w)
 }
 
-func (c *PubRecPacket) Unpack(b io.Reader) error {
+func (c *PubRecPacket) Unpack(b io.Reader) (int, error) {
 	var err error
 	c.MessageID, err = decodeUint16(b)
-	return err
+	return 2, err
 }

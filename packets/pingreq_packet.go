@@ -44,6 +44,6 @@ func (c *PingReqPacket) Write(w io.Writer) (int64, error) {
 	return buf.WriteTo(w)
 }
 
-func (c *PingReqPacket) Unpack(b io.Reader) error {
-	return nil
+func (c *PingReqPacket) Unpack(b io.Reader) (int, error) {
+	return 0, nil
 }

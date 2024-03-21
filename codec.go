@@ -45,20 +45,22 @@ func NewFixedHead(t MessageType) *FixedHeader {
 }
 
 // ReadOnce      读取一个报文
-func ReadOnce(r io.Reader) (ControlPacketInterface, error) {
-	h, err := packets.ReadFixedHeader(r)
+func ReadOnce(r io.Reader) (int, ControlPacketInterface, error) {
+	var readLen, rl int
+	readLen, h, err := packets.ReadFixedHeader(r)
 	if err != nil {
-		return nil, err
+		return readLen, nil, err
 	}
 	cp, err := packets.NewPacketWithFixedHeader(h)
 	if err != nil {
-		return nil, err
+		return readLen, nil, err
 	}
-	err = cp.Unpack(r)
+	rl, err = cp.Unpack(r)
 	if err != nil {
-		return nil, err
+		return readLen, nil, err
 	}
-	return cp, nil
+	readLen += rl
+	return readLen, cp, nil
 }
 
 // ReadStream            读取字节流
@@ -71,7 +73,7 @@ func ReadStream(bs []byte) (list []ControlPacketInterface, lastBytes []byte, err
 		}
 		headBs := bs[:2]
 		bs = bs[2:]
-		header, err = packets.ReadFixedHeader(bytes.NewBuffer(headBs))
+		_, header, err = packets.ReadFixedHeader(bytes.NewBuffer(headBs))
 		if err != nil {
 			return list, bs, err
 		}
@@ -87,7 +89,7 @@ func ReadStream(bs []byte) (list []ControlPacketInterface, lastBytes []byte, err
 			if header.RemainingLength <= len(bs) {
 				packetBs := bs[:header.RemainingLength]
 				bs = bs[header.RemainingLength:]
-				err = cp.Unpack(bytes.NewBuffer(packetBs))
+				_, err = cp.Unpack(bytes.NewBuffer(packetBs))
 				if err != nil {
 					return list, bs, err
 				}

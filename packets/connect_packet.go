@@ -103,20 +103,23 @@ func (c *ConnectPacket) Write(w io.Writer) (int64, error) {
 	return buf.WriteTo(w)
 }
 
-func (c *ConnectPacket) Unpack(b io.Reader) error {
+func (c *ConnectPacket) Unpack(b io.Reader) (int, error) {
 	var err error
-	c.ProtocolName, err = decodeString(b)
+	var readLen, rl int
+	readLen, c.ProtocolName, err = decodeString(b)
 	if err != nil {
-		return err
+		return readLen, err
 	}
 	c.ProtocolVersion, err = decodeByte(b)
 	if err != nil {
-		return err
+		return readLen, err
 	}
+	readLen += 1
 	options, err := decodeByte(b)
 	if err != nil {
-		return err
+		return readLen, err
 	}
+	readLen += 1
 	c.ReservedBit = 1 & options
 	c.CleanSession = 1&(options>>1) > 0
 	c.WillFlag = 1&(options>>2) > 0
@@ -126,34 +129,39 @@ func (c *ConnectPacket) Unpack(b io.Reader) error {
 	c.UsernameFlag = 1&(options>>7) > 0
 	c.Keepalive, err = decodeUint16(b)
 	if err != nil {
-		return err
+		return readLen, err
 	}
-	c.ClientIdentifier, err = decodeString(b)
+	rl, c.ClientIdentifier, err = decodeString(b)
 	if err != nil {
-		return err
+		return readLen, err
 	}
+	readLen += rl
 	if c.WillFlag {
-		c.WillTopic, err = decodeString(b)
+		rl, c.WillTopic, err = decodeString(b)
 		if err != nil {
-			return err
+			return readLen, err
 		}
-		c.WillMessage, err = decodeBytes(b)
+		readLen += rl
+		rl, c.WillMessage, err = decodeBytes(b)
 		if err != nil {
-			return err
+			return readLen, err
 		}
+		readLen += rl
 	}
 	if c.UsernameFlag {
-		c.Username, err = decodeString(b)
+		rl, c.Username, err = decodeString(b)
 		if err != nil {
-			return err
+			return readLen, err
 		}
+		readLen += rl
 	}
 	if c.PasswordFlag {
-		c.Password, err = decodeBytes(b)
+		rl, c.Password, err = decodeBytes(b)
 		if err != nil {
-			return err
+			return readLen, err
 		}
+		readLen += rl
 	}
 
-	return nil
+	return readLen, nil
 }
